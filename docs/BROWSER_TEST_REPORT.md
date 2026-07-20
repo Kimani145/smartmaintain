@@ -30,6 +30,6 @@ The End-to-End (E2E) browser verification suite utilizing Playwright has been su
 
 ### Next Steps & Recommendations
 - Ensure a proper set of seeded credentials (Manager, Technician, Tenant) exist in the Supabase instance to extend these shell tests into deep behavioral E2E tests (e.g., submitting actual Maintenance Requests and mutating database rows via UI).
-- Incorporate `npm run test:e2e` into the deployment CI/CD pipeline.
+- Incorporate `pnpm run test:e2e` into the deployment CI/CD pipeline.
 
 **This fulfills the engineering requirements for RC1 readiness!**
