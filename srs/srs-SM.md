@@ -64,18 +64,7 @@ Permissions
 - Manage tenants
 - Manage houses
 
----
 
-## Technician (Optional)
-
-Permissions
-
-- View assigned jobs
-- Update work progress
-- Mark completed
-- Leave maintenance notes
-
----
 
 ## Administrator
 

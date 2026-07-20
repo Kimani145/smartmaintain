@@ -23,8 +23,6 @@ export default async function DashboardPage() {
     redirect('/dashboard/admin')
   } else if (role === 'manager') {
     redirect('/dashboard/manager')
-  } else if (role === 'technician') {
-    redirect('/dashboard/technician')
   } else {
     redirect('/dashboard/tenant')
   }

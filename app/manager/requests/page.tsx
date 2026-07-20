@@ -18,17 +18,13 @@ interface MaintenanceRequest {
   assigned_to: string | null
   created_at: string
 }
-interface Technician {
-  id: string
-  full_name: string
-}
+
 
 export default function ManagerRequestsPage() {
   const [requests, setRequests] = useState<MaintenanceRequest[]>([])
-  const [technicians, setTechnicians] = useState<Technician[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [assigningId, setAssigningId] = useState<string | null>(null)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -56,13 +52,6 @@ export default function ManagerRequestsPage() {
           setRequests(requestsData || [])
         }
 
-        // Fetch technicians
-        const { data: technicianData } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .eq('role', 'technician')
-
-        setTechnicians(technicianData || [])
       } catch (err) {
         setError('Failed to load data')
       } finally {
@@ -73,13 +62,13 @@ export default function ManagerRequestsPage() {
     fetchData()
   }, [router])
 
-  const handleAssignTechnician = async (requestId: string, technicianId: string) => {
+  const handleUpdateStatus = async (requestId: string, newStatus: string) => {
     try {
-      setAssigningId(requestId)
+      setUpdatingId(requestId)
       const supabase = createClient()
       const { error: updateError } = await supabase
         .from('maintenance_requests')
-        .update({ assigned_to: technicianId, status: 'assigned' })
+        .update({ status: newStatus })
         .eq('id', requestId)
 
       if (updateError) {
@@ -87,25 +76,14 @@ export default function ManagerRequestsPage() {
       } else {
         setRequests((prev) =>
           prev.map((req) =>
-            req.id === requestId ? { ...req, assigned_to: technicianId, status: 'assigned' } : req
+            req.id === requestId ? { ...req, status: newStatus } : req
           )
         )
-
-        // Notify technician of assignment
-        const assignedRequest = requests.find((r) => r.id === requestId)
-        if (assignedRequest) {
-          await createNotification({
-            user_id: technicianId,
-            request_id: requestId,
-            type: 'request_assigned',
-            message: `You have been assigned: ${assignedRequest.title}`,
-          })
-        }
       }
     } catch (err) {
-      setError('Failed to assign technician')
+      setError('Failed to update status')
     } finally {
-      setAssigningId(null)
+      setUpdatingId(null)
     }
   }
 
@@ -173,29 +151,24 @@ export default function ManagerRequestsPage() {
                   </div>
                   <div className="w-48">
                     {request.status === 'pending' && (
-                      <select
-                        defaultValue=""
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleAssignTechnician(request.id, e.target.value)
-                            e.target.value = ''
-                          }
-                        }}
-                        disabled={assigningId === request.id}
-                        className="w-full px-2 py-1 border border-border rounded text-sm bg-background text-foreground"
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateStatus(request.id, 'in_progress')}
+                        disabled={updatingId === request.id}
+                        className="w-full"
                       >
-                        <option value="">Assign Technician...</option>
-                        {technicians.map((tech) => (
-                          <option key={tech.id} value={tech.id}>
-                            {tech.full_name}
-                          </option>
-                        ))}
-                      </select>
+                        Start Work
+                      </Button>
                     )}
-                    {request.assigned_to && (
-                      <div className="text-sm text-muted-foreground">
-                        <span className="font-medium">Assigned</span>
-                      </div>
+                    {request.status === 'in_progress' && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateStatus(request.id, 'completed')}
+                        disabled={updatingId === request.id}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                      >
+                        Complete Request
+                      </Button>
                     )}
                   </div>
                 </div>

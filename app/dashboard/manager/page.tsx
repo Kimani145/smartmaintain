@@ -59,17 +59,17 @@ export default async function ManagerDashboard() {
             </div>
           </Link>
 
-          <Link href="/manager/technicians">
-            <div className="p-6 border border-border rounded-lg hover:border-primary cursor-pointer bg-card">
-              <h3 className="font-semibold text-foreground">Technicians</h3>
-              <p className="text-sm text-muted-foreground">Assign and manage technicians</p>
-            </div>
-          </Link>
-
           <Link href="/manager/reports">
             <div className="p-6 border border-border rounded-lg hover:border-primary cursor-pointer bg-card">
               <h3 className="font-semibold text-foreground">Reports</h3>
-              <p className="text-sm text-muted-foreground">View performance reports</p>
+              <p className="text-sm text-muted-foreground">View property analytics</p>
+            </div>
+          </Link>
+
+          <Link href="/report">
+            <div className="p-6 border border-border rounded-lg bg-card hover:border-destructive cursor-pointer transition-colors">
+              <h3 className="font-semibold text-destructive mb-2">Report User</h3>
+              <p className="text-sm text-muted-foreground">Report inappropriate behavior</p>
             </div>
           </Link>
         </div>

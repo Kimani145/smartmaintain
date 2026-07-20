@@ -54,6 +54,20 @@ export default async function TenantDashboard() {
               <p className="text-sm text-muted-foreground">View all your requests</p>
             </div>
           </Link>
+
+          <Link href="/tenant/settings">
+            <div className="p-6 border border-border rounded-lg bg-card hover:border-primary cursor-pointer transition-colors">
+              <h3 className="font-semibold text-foreground mb-2">Settings</h3>
+              <p className="text-sm text-muted-foreground">Manage your account settings</p>
+            </div>
+          </Link>
+
+          <Link href="/report">
+            <div className="p-6 border border-border rounded-lg bg-card hover:border-destructive cursor-pointer transition-colors">
+              <h3 className="font-semibold text-destructive mb-2">Report User</h3>
+              <p className="text-sm text-muted-foreground">Report inappropriate behavior</p>
+            </div>
+          </Link>
         </div>
       </main>
     </div>

@@ -20,7 +20,7 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -28,6 +28,23 @@ export default function LoginPage() {
       if (authError) {
         setError(authError.message)
         return
+      }
+
+      if (signInData.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', signInData.user.id)
+          .single()
+
+        if (profile?.role === 'admin') {
+          // Check if they need 2FA verification
+          const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+          if (aal?.currentLevel === 'aal1') {
+            router.push('/auth/verify-2fa')
+            return
+          }
+        }
       }
 
       router.push('/dashboard')

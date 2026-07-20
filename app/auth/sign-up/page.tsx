@@ -10,7 +10,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [role, setRole] = useState<'tenant' | 'technician' | 'manager'>('tenant')
+  const [role, setRole] = useState<'tenant' | 'manager'>('tenant')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -108,11 +108,10 @@ export default function SignUpPage() {
               </label>
               <select
                 value={role}
-                onChange={(e) => setRole(e.target.value as 'tenant' | 'technician' | 'manager')}
+                onChange={(e) => setRole(e.target.value as 'tenant' | 'manager')}
                 className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="tenant">Tenant</option>
-                <option value="technician">Technician</option>
                 <option value="manager">Manager</option>
               </select>
             </div>
