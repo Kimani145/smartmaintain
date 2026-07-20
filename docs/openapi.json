@@ -1,0 +1,63 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SMARTMAINTAIN API",
+    "version": "1.0.0",
+    "description": "Supabase PostgREST API for SMARTMAINTAIN application."
+  },
+  "servers": [
+    {
+      "url": "https://<PROJECT_REF>.supabase.co/rest/v1"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "apikey"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": [],
+      "apiKey": []
+    }
+  ],
+  "paths": {
+    "/maintenance_requests": {
+      "get": {
+        "summary": "List maintenance requests",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a maintenance request",
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/profiles": {
+      "get": {
+        "summary": "List user profiles",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        }
+      }
+    }
+  }
+}

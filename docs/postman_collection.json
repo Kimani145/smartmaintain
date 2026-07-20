@@ -1,0 +1,30 @@
+{
+  "info": {
+    "name": "SMARTMAINTAIN",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Maintenance Requests",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{SUPABASE_ANON_KEY}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{USER_JWT}}"
+          }
+        ],
+        "url": {
+          "raw": "{{SUPABASE_URL}}/rest/v1/maintenance_requests?select=*",
+          "host": ["{{SUPABASE_URL}}"],
+          "path": ["rest", "v1", "maintenance_requests"],
+          "query": [{"key": "select", "value": "*"}]
+        }
+      }
+    }
+  ]
+}
