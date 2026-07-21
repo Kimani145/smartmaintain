@@ -41,26 +41,79 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    request.nextUrl.pathname.startsWith('/protected') &&
-    !user
-  ) {
+  const isProtectedRoute = [
+    '/dashboard',
+    '/admin',
+    '/manager',
+    '/tenant',
+    '/technician',
+    '/notifications',
+    '/report',
+    '/protected',
+  ].some((path) => request.nextUrl.pathname.startsWith(path))
+
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
   }
 
-  // Check for banned user globally
+  // Check for banned user globally and enforce dashboard role boundaries
   if (user && !request.nextUrl.pathname.startsWith('/banned') && !request.nextUrl.pathname.startsWith('/auth')) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('is_banned')
+      .select('is_banned, role, email')
       .eq('id', user.id)
       .single()
 
     if (profile?.is_banned) {
       const url = request.nextUrl.clone()
       url.pathname = '/banned'
+      return NextResponse.redirect(url)
+    }
+
+    const role = resolveUserRole(profile)
+    const pathname = request.nextUrl.pathname
+
+    if (pathname.startsWith('/dashboard')) {
+      if (pathname.startsWith('/dashboard/admin') && role !== 'admin') {
+        const url = request.nextUrl.clone()
+        url.pathname = `/dashboard/${role}`
+        return NextResponse.redirect(url)
+      }
+      if (pathname.startsWith('/dashboard/manager') && role !== 'manager' && role !== 'admin') {
+        const url = request.nextUrl.clone()
+        url.pathname = `/dashboard/${role}`
+        return NextResponse.redirect(url)
+      }
+      if (pathname.startsWith('/dashboard/technician') && role !== 'technician' && role !== 'admin') {
+        const url = request.nextUrl.clone()
+        url.pathname = `/dashboard/${role}`
+        return NextResponse.redirect(url)
+      }
+      // Tenants can only access /dashboard/tenant, but we don't strictly block them from /dashboard 
+      // since /dashboard redirects them anyway.
+    }
+    
+    // Also protect non-dashboard top-level routes
+    if (pathname.startsWith('/admin') && role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = `/dashboard/${role}`
+      return NextResponse.redirect(url)
+    }
+    if (pathname.startsWith('/manager') && role !== 'manager' && role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = `/dashboard/${role}`
+      return NextResponse.redirect(url)
+    }
+    if (pathname.startsWith('/technician') && role !== 'technician' && role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = `/dashboard/${role}`
+      return NextResponse.redirect(url)
+    }
+    if (pathname.startsWith('/tenant') && role !== 'tenant') {
+      const url = request.nextUrl.clone()
+      url.pathname = `/dashboard/${role}`
       return NextResponse.redirect(url)
     }
   }
@@ -79,4 +132,35 @@ export async function updateSession(request: NextRequest) {
   // of sync and terminate the user's session prematurely!
 
   return supabaseResponse
+}
+
+/**
+ * Canonical role resolver — the single source of truth for all role decisions.
+ *
+ * Pass the full profile (or null when it is missing).  Callers should NEVER
+ * duplicate this logic; always import from here.
+ *
+ * Accepts null so callers don't need to guard before calling.
+ */
+export function resolveUserRole(
+  profile: { role: string; email: string } | null | undefined,
+): 'admin' | 'manager' | 'tenant' | 'technician' {
+  if (!profile) return 'tenant'
+  const role = profile.role as string
+  // Keep technician as a valid resolved role even though the enum was removed
+  // from the DB — the /dashboard/technician route still exists.
+  if (role === 'admin' || role === 'manager' || role === 'technician' || role === 'tenant') {
+    return role as 'admin' | 'manager' | 'tenant' | 'technician'
+  }
+  return 'tenant'
+}
+
+/**
+ * @deprecated Use resolveUserRole() instead.
+ * Kept for backwards-compatibility with existing imports.
+ */
+export function getVirtualRole(
+  profile: { role: string; email: string } | null | undefined,
+): string {
+  return resolveUserRole(profile)
 }

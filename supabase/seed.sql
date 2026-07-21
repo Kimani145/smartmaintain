@@ -15,6 +15,7 @@ DECLARE
 
     prop1_id UUID := gen_random_uuid();
     prop2_id UUID := gen_random_uuid();
+    prop3_id UUID := gen_random_uuid();
 
     unit1_id UUID := gen_random_uuid();
     unit2_id UUID := gen_random_uuid();
@@ -53,7 +54,8 @@ BEGIN
     -- 2. Insert Properties
     INSERT INTO public.properties (id, name, location, description) VALUES
     (prop1_id, 'Sunset Apartments', '123 Sunset Blvd, Sunnyville', 'A beautiful complex with a pool.'),
-    (prop2_id, 'Oakwood Residences', '456 Oak St, Woodland', 'Quiet neighborhood living.');
+    (prop2_id, 'Oakwood Residences', '456 Oak St, Woodland', 'Quiet neighborhood living.'),
+    (prop3_id, 'Downtown Lofts', '789 Main St, Metro City', 'Modern living in the heart of the city.');
 
     -- 3. Insert Units
     INSERT INTO public.units (id, property_id, unit_number, floor, status, rent) VALUES
@@ -98,5 +100,12 @@ BEGIN
     (tenant2_id, 'Technician Assigned', 'John Technician has been assigned to AC Not Cooling.', false),
     (tech1_id, 'New Assignment', 'You have been assigned a new request: AC Not Cooling', false),
     (tenant5_id, 'Request Completed', 'Your request Paint Peeling is marked as completed.', true);
+
+    -- 8. Insert Audit Logs
+    INSERT INTO public.audit_logs (user_id, action, entity, entity_id, changes) VALUES
+    (admin_id, 'CREATED_PROPERTY', 'properties', prop3_id, '{"name": "Downtown Lofts"}'),
+    (manager_id, 'ASSIGNED_TECHNICIAN', 'maintenance_requests', req2_id, '{"assigned_to": "tech1_id"}'),
+    (tech1_id, 'UPDATED_STATUS', 'maintenance_requests', req4_id, '{"status": "completed"}'),
+    (tenant1_id, 'CREATED_REQUEST', 'maintenance_requests', req1_id, '{"title": "Leaking Sink"}');
 
 END $$;

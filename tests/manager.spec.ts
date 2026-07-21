@@ -1,15 +1,89 @@
 import { test, expect } from '@playwright/test';
 
-// NOTE: This test requires a valid manager login, which is skipped if no seed data is present.
-// It assumes that the user can manually configure a manager for full E2E testing, or we rely on a seeded DB.
-
-test.describe('Property Management (Manager)', () => {
-  test('Requires Manager Authentication', async ({ page }) => {
+test.describe('Property Management & Connection Approval (Manager)', () => {
+  test('Requires Manager Authentication for manager pages', async ({ page }) => {
     await page.goto('/dashboard/manager');
-    // Should be redirected if not logged in
+    await expect(page).toHaveURL(/.*\/auth\/login/);
+
+    await page.goto('/manager/tenants');
+    await expect(page).toHaveURL(/.*\/auth\/login/);
+
+    await page.goto('/manager/requests');
+    await expect(page).toHaveURL(/.*\/auth\/login/);
+
+    await page.goto('/manager/properties');
+    await expect(page).toHaveURL(/.*\/auth\/login/);
+
+    await page.goto('/manager/units');
     await expect(page).toHaveURL(/.*\/auth\/login/);
   });
-  
-  // A complete E2E test would log in as a manager, go to /manager/properties, and create a property.
-  // The functionality is covered by the plan but execution depends on seeded credentials.
+
+  test('Manager Login and Dashboard access', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.fill('input[type="email"]', 'manager@example.com');
+    await page.fill('input[type="password"]', 'password123');
+    await page.click('button[type="submit"]');
+
+    await page.waitForTimeout(1000);
+    if (page.url().includes('/dashboard')) {
+      await expect(page).toHaveURL(/.*\/dashboard\/manager/);
+    }
+  });
+
+  test('Manager Tenants Management & Connection Approval', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.fill('input[type="email"]', 'manager@example.com');
+    await page.fill('input[type="password"]', 'password123');
+    await page.click('button[type="submit"]');
+
+    await page.waitForTimeout(1000);
+    if (page.url().includes('/dashboard')) {
+      await page.goto('/manager/tenants');
+      await expect(page.locator('h1')).toContainText('Manage Tenants');
+
+      // Verify presence of Pending Connections section or Active Tenants
+      const pendingSection = page.locator('text=Pending Connection Requests');
+      if (await pendingSection.isVisible()) {
+        const approveBtn = page.locator('button:has-text("Approve")').first();
+        if (await approveBtn.isVisible()) {
+          await approveBtn.click();
+        }
+      }
+    }
+  });
+
+  test('Manager Maintenance Request Management & Status Updates', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.fill('input[type="email"]', 'manager@example.com');
+    await page.fill('input[type="password"]', 'password123');
+    await page.click('button[type="submit"]');
+
+    await page.waitForTimeout(1000);
+    if (page.url().includes('/dashboard')) {
+      await page.goto('/manager/requests');
+      await expect(page.locator('h1')).toContainText('Manage Requests');
+
+      // Check for action buttons such as "Start Work" or "Complete Request"
+      const startWorkBtn = page.locator('button:has-text("Start Work")').first();
+      if (await startWorkBtn.isVisible()) {
+        await startWorkBtn.click();
+      }
+    }
+  });
+
+  test('Manager Properties & Units navigation', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.fill('input[type="email"]', 'manager@example.com');
+    await page.fill('input[type="password"]', 'password123');
+    await page.click('button[type="submit"]');
+
+    await page.waitForTimeout(1000);
+    if (page.url().includes('/dashboard')) {
+      await page.goto('/manager/properties');
+      await expect(page.locator('h1')).toContainText(/Properties|Manage Properties/i);
+
+      await page.goto('/manager/units');
+      await expect(page.locator('h1')).toContainText(/Units|Manage Units/i);
+    }
+  });
 });

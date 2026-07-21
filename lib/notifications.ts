@@ -10,11 +10,15 @@ interface NotificationData {
 export async function createNotification(data: NotificationData) {
   try {
     const supabase = createClient()
+    const title = data.type
+      ? data.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      : 'Notification'
+
     const { error } = await supabase.from('notifications').insert({
       user_id: data.user_id,
-      request_id: data.request_id || null,
-      type: data.type,
+      title: title,
       message: data.message,
+      read: false
     })
 
     if (error) {
