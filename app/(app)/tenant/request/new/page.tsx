@@ -75,7 +75,7 @@ export default function NewRequestPage() {
         description: data.description,
         category: data.category,
         priority: data.priority,
-        status: 'pending',
+        status: 'submitted',
       }).select().single()
 
       if (insertError || !requestData) {

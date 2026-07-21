@@ -61,7 +61,7 @@ export default async function ManagerDashboard() {
     .from('maintenance_requests')
     .select('id', { count: 'exact', head: true })
     .in('property_id', propertyIds.length ? propertyIds : ['00000000-0000-0000-0000-000000000000'])
-    .eq('status', 'pending')
+    .in('status', ['submitted', 'manager_reviewed'])
 
   // Recent requests
   const { data: recentRequests } = await supabase
@@ -146,7 +146,7 @@ export default async function ManagerDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         {req.priority === 'high' && <Badge variant="urgent">High</Badge>}
-                        {req.status === 'pending' && <Badge variant="warning">Pending</Badge>}
+                        {(req.status === 'pending' || req.status === 'submitted') && <Badge variant="warning">Submitted</Badge>}
                         {req.status === 'in_progress' && <Badge variant="inProgress">In Progress</Badge>}
                         {req.status === 'completed' && <Badge variant="success">Completed</Badge>}
                       </div>

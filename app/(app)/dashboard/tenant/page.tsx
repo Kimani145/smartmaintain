@@ -53,7 +53,7 @@ export default async function TenantDashboard() {
     .from('maintenance_requests')
     .select('id', { count: 'exact', head: true })
     .eq('tenant_id', user.id)
-    .in('status', ['pending', 'in_progress'])
+    .in('status', ['submitted', 'manager_reviewed', 'assigned', 'accepted', 'in_progress'])
 
   // Fetch completed requests
   const { count: completedRequests } = await supabase
