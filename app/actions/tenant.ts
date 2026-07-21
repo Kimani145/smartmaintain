@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 
 const connectSchema = z.object({
@@ -31,8 +32,24 @@ export async function connectToManager(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Not authenticated.' }
 
-    // 1. Find the manager by code
-    const { data: managerProfile, error: managerError } = await supabase
+    // 1. Initialize Service Role Client for Manager Lookup (bypasses RLS)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL')
+      return { error: 'Server configuration error. Contact administrator.' }
+    }
+
+    const supabaseAdmin = createAdminClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+
+    // Find the manager by code using service role client
+    const { data: managerProfile, error: managerError } = await supabaseAdmin
       .from('profiles')
       .select('id')
       .eq('manager_code', managerCode)
@@ -65,3 +82,4 @@ export async function connectToManager(
     return { error: 'An unexpected error occurred.' }
   }
 }
+
