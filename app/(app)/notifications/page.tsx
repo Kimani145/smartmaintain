@@ -66,17 +66,20 @@ export default function NotificationsPage() {
         return '🔄'
       case 'request_completed':
         return '✅'
+      case 'tenant_connected':
+      case 'tenant_connection':
+        return '🔗'
       default:
-        return '📬'
+        return '🔔'
     }
   }
 
   return (
     <div className="min-h-screen bg-background">
-      
-
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Notifications</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Alerts & Notifications</h1>
+        </div>
 
         {error && (
           <div className="text-sm text-destructive bg-destructive/10 p-3 rounded mb-4">
@@ -93,8 +96,12 @@ export default function NotificationsPage() {
         ) : notifications.length === 0 ? (
           <EmptyState
             icon={Bell}
-            title="No notifications yet"
-            description="You'll be notified here when there are updates on your maintenance requests or account."
+            title="No alerts or notifications yet"
+            description="System alerts will appear here when tenants submit requests, connect to your properties, or when maintenance tasks are assigned and completed."
+            primaryAction={{
+              label: "Back to Dashboard",
+              href: "/dashboard/manager"
+            }}
           />
         ) : (
           <div className="space-y-2">
@@ -113,7 +120,7 @@ export default function NotificationsPage() {
                       {getNotificationIcon(notification.type)}
                     </span>
                     <div>
-                      <p className={notification.read ? 'text-muted-foreground' : 'text-foreground font-medium'}>
+                      <p className={notification.read ? 'text-muted-foreground text-sm' : 'text-foreground font-medium text-sm'}>
                         {notification.message}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">

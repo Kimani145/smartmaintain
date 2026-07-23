@@ -13,7 +13,7 @@ export async function updateConnectionStatus(connectionId: string, status: 'appr
     // Ensure manager owns this connection
     const { data: connection, error: getError } = await supabase
       .from('tenant_connections')
-      .select('manager_id')
+      .select('manager_id, tenant_id')
       .eq('id', connectionId)
       .single()
 
@@ -33,6 +33,15 @@ export async function updateConnectionStatus(connectionId: string, status: 'appr
     if (error) {
       console.error('Error updating connection:', error)
       return { error: 'Failed to update connection status.' }
+    }
+
+    if (connection.tenant_id) {
+      await supabase.from('notifications').insert({
+        user_id: connection.tenant_id,
+        title: 'Connection Status Updated',
+        message: `Your connection request has been ${status}.`,
+        read: false,
+      })
     }
 
     return { success: true }

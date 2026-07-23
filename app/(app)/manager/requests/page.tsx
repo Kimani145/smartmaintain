@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -33,6 +33,8 @@ export default function ManagerRequestsPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const statusFilter = searchParams.get('status')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -171,12 +173,36 @@ export default function ManagerRequestsPage() {
     }
   }
 
+  const filteredRequests = requests.filter((req) => {
+    if (!statusFilter) return true
+    if (statusFilter === 'submitted' || statusFilter === 'pending') {
+      return req.status === 'submitted' || req.status === 'pending'
+    }
+    return req.status === statusFilter
+  })
+
   return (
     <div className="min-h-screen bg-background">
-      
-
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Manage Requests</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Manage Requests</h1>
+          {statusFilter && (
+            <Link href="/manager/requests">
+              <Button variant="ghost" size="sm" className="text-xs">
+                Clear Filter ({statusFilter})
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {statusFilter && (
+          <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 px-4 py-2 rounded-md mb-6 text-sm">
+            <span>Showing requests filtered by status: <strong className="capitalize">{statusFilter}</strong></span>
+            <Link href="/manager/requests" className="text-xs font-semibold underline hover:no-underline">
+              Show All Requests
+            </Link>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-4">
@@ -184,19 +210,19 @@ export default function ManagerRequestsPage() {
             <Skeleton className="h-[120px] w-full rounded-lg" />
             <Skeleton className="h-[120px] w-full rounded-lg" />
           </div>
-        ) : requests.length === 0 ? (
+        ) : filteredRequests.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
-            title="No requests found"
-            description="There are currently no maintenance requests in the system."
+            title={statusFilter ? `No ${statusFilter} requests found` : "No requests found"}
+            description={statusFilter ? `There are currently no requests with status '${statusFilter}'.` : "There are currently no maintenance requests in the system."}
             primaryAction={{
-              label: "Back to Dashboard",
-              href: "/dashboard/manager"
+              label: statusFilter ? "View All Requests" : "Back to Dashboard",
+              href: statusFilter ? "/manager/requests" : "/dashboard/manager"
             }}
           />
         ) : (
           <div className="space-y-3">
-            {requests.map((request) => (
+            {filteredRequests.map((request) => (
               <div
                 key={request.id}
                 className="border border-border rounded-lg bg-card shadow-sm"

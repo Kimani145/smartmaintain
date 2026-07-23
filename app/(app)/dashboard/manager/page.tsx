@@ -44,41 +44,57 @@ export default async function ManagerDashboard() {
   const totalProperties = propertyIds.length
 
   // Total units
-  const { count: totalUnits } = await supabase
+  let totalUnitsQuery = supabase
     .from('units')
     .select('id', { count: 'exact', head: true })
-    .in('property_id', propertyIds.length ? propertyIds : ['00000000-0000-0000-0000-000000000000'])
+  if (propertyIds.length > 0) {
+    totalUnitsQuery = totalUnitsQuery.in('property_id', propertyIds)
+  }
+  const { count: totalUnits } = await totalUnitsQuery
 
   // Active tenants
-  const { count: activeTenants } = await supabase
+  let activeTenantsQuery = supabase
     .from('units')
     .select('id', { count: 'exact', head: true })
-    .in('property_id', propertyIds.length ? propertyIds : ['00000000-0000-0000-0000-000000000000'])
     .not('tenant_id', 'is', null)
+  if (propertyIds.length > 0) {
+    activeTenantsQuery = activeTenantsQuery.in('property_id', propertyIds)
+  }
+  const { count: activeTenants } = await activeTenantsQuery
 
   // Pending requests
-  const { count: pendingRequests } = await supabase
+  let pendingRequestsQuery = supabase
     .from('maintenance_requests')
     .select('id', { count: 'exact', head: true })
-    .in('property_id', propertyIds.length ? propertyIds : ['00000000-0000-0000-0000-000000000000'])
-    .in('status', ['submitted', 'manager_reviewed'])
+    .in('status', ['submitted', 'manager_reviewed', 'pending'])
+  if (propertyIds.length > 0) {
+    pendingRequestsQuery = pendingRequestsQuery.in('property_id', propertyIds)
+  }
+  const { count: pendingRequests } = await pendingRequestsQuery
 
   // Recent requests
-  const { data: recentRequests } = await supabase
+  let recentRequestsQuery = supabase
     .from('maintenance_requests')
     .select(`
       id, title, status, priority, created_at,
-      unit:units(unit_number, property:properties(name)),
-      tenant:profiles(full_name)
+      unit:units!unit_id(unit_number, property:properties!property_id(name)),
+      tenant:profiles!tenant_id(full_name)
     `)
-    .in('property_id', propertyIds.length ? propertyIds : ['00000000-0000-0000-0000-000000000000'])
     .order('created_at', { ascending: false })
     .limit(5)
 
+  if (propertyIds.length > 0) {
+    recentRequestsQuery = recentRequestsQuery.in('property_id', propertyIds)
+  }
+
+  const { data: recentRequests, error: recentRequestsError } = await recentRequestsQuery
+
+  if (recentRequestsError) {
+    console.error('Error fetching recent requests for manager dashboard:', recentRequestsError)
+  }
+
   return (
     <div className="min-h-screen bg-background">
-      
-
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">Manager Dashboard</h2>
@@ -86,42 +102,69 @@ export default async function ManagerDashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="hover:shadow-md transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Properties</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalProperties}</div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-md transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Units</CardTitle>
-              <Home className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalUnits || 0}</div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-md transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Tenants</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{activeTenants || 0}</div>
-            </CardContent>
-          </Card>
-          <Card className="hover:shadow-md transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Requests</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pendingRequests || 0}</div>
-            </CardContent>
-          </Card>
+          <Link 
+            href="/manager/properties" 
+            className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Total Properties metric card. Click to view properties."
+          >
+            <Card className="hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Properties</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalProperties}</div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link 
+            href="/manager/units" 
+            className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Total Units metric card. Click to view units."
+          >
+            <Card className="hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Units</CardTitle>
+                <Home className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalUnits || 0}</div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link 
+            href="/manager/tenants" 
+            className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Active Tenants metric card. Click to view tenants."
+          >
+            <Card className="hover:shadow-md hover:border-primary/50 transition-all cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Active Tenants</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{activeTenants || 0}</div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link 
+            href="/manager/requests?status=submitted" 
+            className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Pending Requests metric card. Click to view pending requests."
+          >
+            <Card className="hover:shadow-md hover:border-amber-500/50 transition-all cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pending Requests</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{pendingRequests || 0}</div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

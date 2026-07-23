@@ -76,6 +76,14 @@ export async function connectToManager(
       return { error: 'Failed to submit connection request.' }
     }
 
+    // 3. Create notification for manager
+    await supabaseAdmin.from('notifications').insert({
+      user_id: managerProfile.id,
+      title: 'Tenant Connection Request',
+      message: 'A tenant has submitted a connection request to your account.',
+      read: false,
+    })
+
     return { success: true }
   } catch (err) {
     console.error('Connection error:', err)
